@@ -35,4 +35,8 @@ Boost Software License (BSL1.0) http://opensource.org/licenses/BSL-1.0
 
 Copyright
 ---------
-Angus Johnson 2010-2014 http://www.angusj.com  
+Javascript Clipper
+Author: Timo
+
+Original Clipper
+Author: Angus Johnson 2010-2014 http://www.angusj.com
