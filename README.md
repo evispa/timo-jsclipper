@@ -28,3 +28,11 @@ Features
 * Demos use inline SVG and Canvas libraries
 * The library is significantly faster than commercial alternatives
 * Uses Tom Wu's fast big integer library
+
+License
+---------
+Boost Software License (BSL1.0) http://opensource.org/licenses/BSL-1.0
+
+Copyright
+---------
+Angus Johnson 2010-2014 http://www.angusj.com  
