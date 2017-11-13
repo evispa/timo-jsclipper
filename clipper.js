@@ -4237,20 +4237,20 @@
     if (use_lines)
     {
       //if either edge is on an OPEN path ...
-      if (e1.WindDelta === 0 || e2.WindDelta === 0)
+      if (fuzzyEquals(e1.WindDelta, 0) || fuzzyEquals(e2.WindDelta, 0))
       {
         //ignore subject-subject open path intersections UNLESS they
         //are both open paths, AND they are both 'contributing maximas' ...
-        if (e1.WindDelta === 0 && e2.WindDelta === 0)
+        if (fuzzyEquals(e1.WindDelta, 0) && fuzzyEquals(e2.WindDelta, 0))
         {
           if ((e1stops || e2stops) && e1Contributing && e2Contributing)
             this.AddLocalMaxPoly(e1, e2, pt);
         }
         //if intersecting a subj line with a subj poly ...
         else if (e1.PolyTyp == e2.PolyTyp &&
-          e1.WindDelta != e2.WindDelta && this.m_ClipType == ClipperLib.ClipType.ctUnion)
+          !fuzzyEquals(e1.WindDelta, e2.WindDelta) && this.m_ClipType == ClipperLib.ClipType.ctUnion)
         {
-          if (e1.WindDelta === 0)
+          if (fuzzyEquals(e1.WindDelta, 0))
           {
             if (e2Contributing)
             {
@@ -4271,14 +4271,14 @@
         }
         else if (e1.PolyTyp != e2.PolyTyp)
         {
-          if ((e1.WindDelta === 0) && Math.abs(e2.WindCnt) == 1 &&
+          if ((fuzzyEquals(e1.WindDelta, 0)) && Math.abs(e2.WindCnt) == 1 &&
             (this.m_ClipType != ClipperLib.ClipType.ctUnion || e2.WindCnt2 === 0))
           {
             this.AddOutPt(e1, pt);
             if (e1Contributing)
               e1.OutIdx = -1;
           }
-          else if ((e2.WindDelta === 0) && (Math.abs(e1.WindCnt) == 1) &&
+          else if (fuzzyEquals(e2.WindDelta, 0) && (Math.abs(e1.WindCnt) == 1) &&
             (this.m_ClipType != ClipperLib.ClipType.ctUnion || e1.WindCnt2 === 0))
           {
             this.AddOutPt(e2, pt);
@@ -4546,7 +4546,7 @@
   };
   ClipperLib.Clipper.prototype.GetHorzDirection = function (HorzEdge, $var)
   {
-    if (HorzEdge.Bot.X < HorzEdge.Top.X)
+    if (fuzzyLt(HorzEdge.Bot.X, HorzEdge.Top.X))
     {
         $var.Left = HorzEdge.Bot.X;
         $var.Right = HorzEdge.Top.X;
@@ -4607,14 +4607,14 @@
       {
         //Break if we've got to the end of an intermediate horizontal edge ...
         //nb: Smaller Dx's are to the right of larger Dx's ABOVE the horizontal.
-        if (e.Curr.X == horzEdge.Top.X && horzEdge.NextInLML !== null && e.Dx < horzEdge.NextInLML.Dx)
+        if (fuzzyEquals(e.Curr.X, horzEdge.Top.X) && horzEdge.NextInLML !== null && fuzzyLt(e.Dx, horzEdge.NextInLML.Dx))
           break;
         var eNext = this.GetNextInAEL(e, dir);
         //saves eNext for later
-        if ((dir == ClipperLib.Direction.dLeftToRight && e.Curr.X <= horzRight) || (dir == ClipperLib.Direction.dRightToLeft && e.Curr.X >= horzLeft))
+        if ((dir == ClipperLib.Direction.dLeftToRight && fuzzyLte(e.Curr.X, horzRight)) || (dir == ClipperLib.Direction.dRightToLeft && fuzzyGte(e.Curr.X, horzLeft)))
         {
 
-          if (horzEdge.OutIdx >= 0 && horzEdge.WindDelta != 0)
+          if (horzEdge.OutIdx >= 0 && !fuzzyEquals(horzEdge.WindDelta, 0))
             this.PrepareHorzJoins(horzEdge, isTopOfScanbeam);
 
           //so far we're still in range of the horizontal Edge  but make sure
@@ -4641,12 +4641,12 @@
           }
           this.SwapPositionsInAEL(horzEdge, e);
         }
-        else if ((dir == ClipperLib.Direction.dLeftToRight && e.Curr.X >= horzRight) || (dir == ClipperLib.Direction.dRightToLeft && e.Curr.X <= horzLeft))
+        else if ((dir == ClipperLib.Direction.dLeftToRight && fuzzyGte(e.Curr.X, horzRight)) || (dir == ClipperLib.Direction.dRightToLeft && fuzzyLte(e.Curr.X, horzLeft)))
           break;
         e = eNext;
       }
       //end while
-      if (horzEdge.OutIdx >= 0 && horzEdge.WindDelta !== 0)
+      if (horzEdge.OutIdx >= 0 && !fuzzyEquals(horzEdge.WindDelta, 0))
         this.PrepareHorzJoins(horzEdge, isTopOfScanbeam);
       if (horzEdge.NextInLML !== null && ClipperLib.ClipperBase.IsHorizontal(horzEdge.NextInLML))
       {
@@ -4670,22 +4670,22 @@
       {
         var op1 = this.AddOutPt(horzEdge, horzEdge.Top);
         horzEdge = this.UpdateEdgeIntoAEL(horzEdge);
-        if (horzEdge.WindDelta === 0)
+        if (fuzzyEquals(horzEdge.WindDelta, 0))
           return;
         //nb: HorzEdge is no longer horizontal here
         var ePrev = horzEdge.PrevInAEL;
         var eNext = horzEdge.NextInAEL;
-        if (ePrev !== null && ePrev.Curr.X == horzEdge.Bot.X &&
-          ePrev.Curr.Y == horzEdge.Bot.Y && ePrev.WindDelta !== 0 &&
-          (ePrev.OutIdx >= 0 && ePrev.Curr.Y > ePrev.Top.Y &&
+        if (ePrev !== null && fuzzyEquals(ePrev.Curr.X, horzEdge.Bot.X) &&
+          fuzzyEquals(ePrev.Curr.Y, horzEdge.Bot.Y) && !fuzzyEquals(ePrev.WindDelta, 0) &&
+          (ePrev.OutIdx >= 0 && fuzzyGt(ePrev.Curr.Y, ePrev.Top.Y) &&
             ClipperLib.ClipperBase.SlopesEqual(horzEdge, ePrev, this.m_UseFullRange)))
         {
           var op2 = this.AddOutPt(ePrev, horzEdge.Bot);
           this.AddJoin(op1, op2, horzEdge.Top);
         }
-        else if (eNext !== null && eNext.Curr.X == horzEdge.Bot.X &&
-          eNext.Curr.Y == horzEdge.Bot.Y && eNext.WindDelta !== 0 &&
-          eNext.OutIdx >= 0 && eNext.Curr.Y > eNext.Top.Y &&
+        else if (eNext !== null && fuzzyEquals(eNext.Curr.X, horzEdge.Bot.X) &&
+          fuzzyEquals(eNext.Curr.Y, horzEdge.Bot.Y) && !fuzzyEquals(eNext.WindDelta, 0) &&
+          eNext.OutIdx >= 0 && fuzzyGt(eNext.Curr.Y, eNext.Top.Y) &&
           ClipperLib.ClipperBase.SlopesEqual(horzEdge, eNext, this.m_UseFullRange))
         {
           var op2 = this.AddOutPt(eNext, horzEdge.Bot);
@@ -4926,7 +4926,7 @@
     //return false but for the edge.Dx value be equal due to double precision rounding.
     if (ClipperLib.ClipperBase.SlopesEqual(edge1, edge2, this.m_UseFullRange) || fuzzyEquals(edge1.Dx, edge2.Dx))
     {
-      if (edge2.Bot.Y > edge1.Bot.Y)
+      if (fuzzyGt(edge2.Bot.Y, edge1.Bot.Y))
       {
         ip.X = edge2.Bot.X;
         ip.Y = edge2.Bot.Y;
@@ -4975,9 +4975,9 @@
       else
         ip.X = ClipperLib.Clipper.Round(edge2.Dx * q + b2);
     }
-    if (ip.Y < edge1.Top.Y || ip.Y < edge2.Top.Y)
+    if (fuzzyLt(ip.Y, edge1.Top.Y) || fuzzyLt(ip.Y, edge2.Top.Y))
     {
-      if (edge1.Top.Y > edge2.Top.Y)
+      if (fuzzyGt(edge1.Top.Y, edge2.Top.Y))
       {
         ip.Y = edge1.Top.Y;
         ip.X = ClipperLib.Clipper.TopX(edge2, edge1.Top.Y);
@@ -5032,9 +5032,9 @@
         if (this.StrictlySimple)
         {
           var ePrev = e.PrevInAEL;
-          if ((e.OutIdx >= 0) && (e.WindDelta !== 0) && ePrev !== null &&
+          if ((e.OutIdx >= 0) && !fuzzyEquals(e.WindDelta, 0) && ePrev !== null &&
             (ePrev.OutIdx >= 0) && (fuzzyEquals(ePrev.Curr.X, e.Curr.X)) &&
-            (ePrev.WindDelta !== 0))
+            !fuzzyEquals(ePrev.WindDelta, 0))
           {
             var op = this.AddOutPt(ePrev, e.Curr);
             var op2 = this.AddOutPt(e, e.Curr);
@@ -5060,20 +5060,20 @@
         //if output polygons share an edge, they'll need joining later ...
         var ePrev = e.PrevInAEL;
         var eNext = e.NextInAEL;
-        if (ePrev !== null && fuzzyEquals(ePrev.Curr.X == e.Bot.X) &&
+        if (ePrev !== null && fuzzyEquals(ePrev.Curr.X, e.Bot.X) &&
         fuzzyEquals(ePrev.Curr.Y, e.Bot.Y) && op !== null &&
-          ePrev.OutIdx >= 0 && ePrev.Curr.Y > ePrev.Top.Y &&
+          ePrev.OutIdx >= 0 && fuzzyGt(ePrev.Curr.Y, ePrev.Top.Y) &&
           ClipperLib.ClipperBase.SlopesEqual(e, ePrev, this.m_UseFullRange) &&
-          (e.WindDelta !== 0) && (ePrev.WindDelta !== 0))
+          !fuzzyEquals(e.WindDelta, 0) && !fuzzyEquals(ePrev.WindDelta, 0))
         {
           var op2 = this.AddOutPt(ePrev, e.Bot);
           this.AddJoin(op, op2, e.Top);
         }
-        else if (eNext !== null && fuzzyEquals(eNext.Curr.X == e.Bot.X) &&
-          fuzzyEquals(eNext.Curr.Y == e.Bot.Y) && op !== null &&
-          eNext.OutIdx >= 0 && eNext.Curr.Y > eNext.Top.Y &&
+        else if (eNext !== null && fuzzyEquals(eNext.Curr.X, e.Bot.X) &&
+          fuzzyEquals(eNext.Curr.Y, e.Bot.Y) && op !== null &&
+          eNext.OutIdx >= 0 && fuzzyGt(eNext.Curr.Y, eNext.Top.Y) &&
           ClipperLib.ClipperBase.SlopesEqual(e, eNext, this.m_UseFullRange) &&
-          (e.WindDelta !== 0) && (eNext.WindDelta !== 0))
+          !fuzzyEquals(e.WindDelta, 0) && !fuzzyEquals(eNext.WindDelta, 0))
         {
           var op2 = this.AddOutPt(eNext, e.Bot);
           this.AddJoin(op, op2, e.Top);
@@ -5109,7 +5109,7 @@
     {
       this.IntersectEdges(e, eMaxPair, e.Top, false);
     }
-    else if (use_lines && e.WindDelta === 0)
+    else if (use_lines && fuzzyEquals(e.WindDelta, 0))
     {
       if (e.OutIdx >= 0)
       {
@@ -5274,9 +5274,9 @@
   };
   ClipperLib.Clipper.prototype.GetOverlap = function (a1, a2, b1, b2, $val)
   {
-    if (a1 < a2)
+    if (fuzzyLt(a1, a2))
     {
-      if (b1 < b2)
+      if (fuzzyLt(b1, b2))
       {
         $val.Left = Math.max(a1, b1);
         $val.Right = Math.min(a2, b2);
@@ -5289,7 +5289,7 @@
     }
     else
     {
-      if (b1 < b2)
+      if (fuzzyLt(b1, b2))
       {
         $val.Left = Math.max(a2, b1);
         $val.Right = Math.min(a1, b2);
@@ -5300,12 +5300,12 @@
         $val.Right = Math.min(a1, b1);
       }
     }
-    return $val.Left < $val.Right;
+    return fuzzyLt($val.Left, $val.Right);
   };
   ClipperLib.Clipper.prototype.JoinHorz = function (op1, op1b, op2, op2b, Pt, DiscardLeft)
   {
-    var Dir1 = (op1.Pt.X > op1b.Pt.X ? ClipperLib.Direction.dRightToLeft : ClipperLib.Direction.dLeftToRight);
-    var Dir2 = (op2.Pt.X > op2b.Pt.X ? ClipperLib.Direction.dRightToLeft : ClipperLib.Direction.dLeftToRight);
+    var Dir1 = (fuzzyGt(op1.Pt.X, op1b.Pt.X) ? ClipperLib.Direction.dRightToLeft : ClipperLib.Direction.dLeftToRight);
+    var Dir2 = (fuzzyGt(op2.Pt.X, op2b.Pt.X) ? ClipperLib.Direction.dRightToLeft : ClipperLib.Direction.dLeftToRight);
     if (Dir1 == Dir2)
       return false;
     //When DiscardLeft, we want Op1b to be on the Left of Op1, otherwise we
@@ -5315,10 +5315,10 @@
     //otherwise make sure we're AT or LEFT of Pt. (Likewise with Op2b.)
     if (Dir1 == ClipperLib.Direction.dLeftToRight)
     {
-      while (op1.Next.Pt.X <= Pt.X &&
-        op1.Next.Pt.X >= op1.Pt.X && op1.Next.Pt.Y == Pt.Y)
+      while (fuzzyLte(op1.Next.Pt.X, Pt.X) &&
+        fuzzyGte(op1.Next.Pt.X, op1.Pt.X) && fuzzyEquals(op1.Next.Pt.Y, Pt.Y))
         op1 = op1.Next;
-      if (DiscardLeft && (op1.Pt.X != Pt.X))
+      if (DiscardLeft && !fuzzyEquals(op1.Pt.X, Pt.X))
         op1 = op1.Next;
       op1b = this.DupOutPt(op1, !DiscardLeft);
       if (ClipperLib.IntPoint.op_Inequality(op1b.Pt, Pt))
@@ -5332,10 +5332,10 @@
     }
     else
     {
-      while (op1.Next.Pt.X >= Pt.X &&
-        op1.Next.Pt.X <= op1.Pt.X && op1.Next.Pt.Y == Pt.Y)
+      while (fuzzyGte(op1.Next.Pt.X, Pt.X) &&
+        fuzzyLte(op1.Next.Pt.X, op1.Pt.X) && fuzzyEquals(op1.Next.Pt.Y, Pt.Y))
         op1 = op1.Next;
-      if (!DiscardLeft && (op1.Pt.X != Pt.X))
+      if (!DiscardLeft && !fuzzyEquals(op1.Pt.X, Pt.X))
         op1 = op1.Next;
       op1b = this.DupOutPt(op1, DiscardLeft);
       if (ClipperLib.IntPoint.op_Inequality(op1b.Pt, Pt))
@@ -5349,10 +5349,10 @@
     }
     if (Dir2 == ClipperLib.Direction.dLeftToRight)
     {
-      while (op2.Next.Pt.X <= Pt.X &&
-        op2.Next.Pt.X >= op2.Pt.X && op2.Next.Pt.Y == Pt.Y)
+      while (fuzzyLte(op2.Next.Pt.X, Pt.X) &&
+        fuzzyGte(op2.Next.Pt.X, op2.Pt.X) && fuzzyEquals(op2.Next.Pt.Y, Pt.Y))
         op2 = op2.Next;
-      if (DiscardLeft && (op2.Pt.X != Pt.X))
+      if (DiscardLeft && !fuzzyEquals(op2.Pt.X, Pt.X))
         op2 = op2.Next;
       op2b = this.DupOutPt(op2, !DiscardLeft);
       if (ClipperLib.IntPoint.op_Inequality(op2b.Pt, Pt))
@@ -5366,10 +5366,10 @@
     }
     else
     {
-      while (op2.Next.Pt.X >= Pt.X &&
-        op2.Next.Pt.X <= op2.Pt.X && op2.Next.Pt.Y == Pt.Y)
+      while (fuzzyGte(op2.Next.Pt.X, Pt.X) &&
+        fuzzyLte(op2.Next.Pt.X, op2.Pt.X) && fuzzyEquals(op2.Next.Pt.Y, Pt.Y))
         op2 = op2.Next;
-      if (!DiscardLeft && (op2.Pt.X != Pt.X))
+      if (!DiscardLeft && !fuzzyEquals(op2.Pt.X, Pt.X))
         op2 = op2.Next;
       op2b = this.DupOutPt(op2, DiscardLeft);
       if (ClipperLib.IntPoint.op_Inequality(op2b.Pt, Pt))
@@ -5410,18 +5410,18 @@
     //location at the Bottom of the overlapping segment (& Join.OffPt is above).
     //3. StrictlySimple joins where edges touch but are not collinear and where
     //Join.OutPt1, Join.OutPt2 & Join.OffPt all share the same point.
-    var isHorizontal = (j.OutPt1.Pt.Y == j.OffPt.Y);
+    var isHorizontal = fuzzyEquals(j.OutPt1.Pt.Y, j.OffPt.Y);
     if (isHorizontal && (ClipperLib.IntPoint.op_Equality(j.OffPt, j.OutPt1.Pt)) && (ClipperLib.IntPoint.op_Equality(j.OffPt, j.OutPt2.Pt)))
     {
       //Strictly Simple join ...
       op1b = j.OutPt1.Next;
       while (op1b != op1 && (ClipperLib.IntPoint.op_Equality(op1b.Pt, j.OffPt)))
         op1b = op1b.Next;
-      var reverse1 = (op1b.Pt.Y > j.OffPt.Y);
+      var reverse1 = fuzzyGt(op1b.Pt.Y, j.OffPt.Y);
       op2b = j.OutPt2.Next;
       while (op2b != op2 && (ClipperLib.IntPoint.op_Equality(op2b.Pt, j.OffPt)))
         op2b = op2b.Next;
-      var reverse2 = (op2b.Pt.Y > j.OffPt.Y);
+      var reverse2 = fuzzyGt(op2b.Pt.Y, j.OffPt.Y);
       if (reverse1 == reverse2)
         return false;
       if (reverse1)
@@ -5455,17 +5455,17 @@
       //them we're not yet sure where the overlapping is. OutPt1.Pt & OutPt2.Pt
       //may be anywhere along the horizontal edge.
       op1b = op1;
-      while (op1.Prev.Pt.Y == op1.Pt.Y && op1.Prev != op1b && op1.Prev != op2)
+      while (fuzzyEquals(op1.Prev.Pt.Y, op1.Pt.Y) && op1.Prev != op1b && op1.Prev != op2)
         op1 = op1.Prev;
-      while (op1b.Next.Pt.Y == op1b.Pt.Y && op1b.Next != op1 && op1b.Next != op2)
+      while (fuzzyEquals(op1b.Next.Pt.Y, op1b.Pt.Y) && op1b.Next != op1 && op1b.Next != op2)
         op1b = op1b.Next;
       if (op1b.Next == op1 || op1b.Next == op2)
         return false;
       //a flat 'polygon'
       op2b = op2;
-      while (op2.Prev.Pt.Y == op2.Pt.Y && op2.Prev != op2b && op2.Prev != op1b)
+      while (fuzzyEquals(op2.Prev.Pt.Y, op2.Pt.Y) && op2.Prev != op2b && op2.Prev != op1b)
         op2 = op2.Prev;
-      while (op2b.Next.Pt.Y == op2b.Pt.Y && op2b.Next != op2 && op2b.Next != op1)
+      while (fuzzyEquals(op2b.Next.Pt.Y, op2b.Pt.Y) && op2b.Next != op2 && op2b.Next != op1)
         op2b = op2b.Next;
       if (op2b.Next == op2 || op2b.Next == op1)
         return false;
@@ -5483,33 +5483,33 @@
       //on the discard Side as either may still be needed for other joins ...
       var Pt = new ClipperLib.IntPoint();
       var DiscardLeftSide;
-      if (op1.Pt.X >= Left && op1.Pt.X <= Right)
+      if (fuzzyGte(op1.Pt.X, Left) && fuzzyLte(op1.Pt.X, Right))
       {
         //Pt = op1.Pt;
         Pt.X = op1.Pt.X;
         Pt.Y = op1.Pt.Y;
-        DiscardLeftSide = (op1.Pt.X > op1b.Pt.X);
+        DiscardLeftSide = fuzzyGt(op1.Pt.X, op1b.Pt.X);
       }
-      else if (op2.Pt.X >= Left && op2.Pt.X <= Right)
+      else if (fuzzyGte(op2.Pt.X, Left) && fuzzyLte(op2.Pt.X, Right))
       {
         //Pt = op2.Pt;
         Pt.X = op2.Pt.X;
         Pt.Y = op2.Pt.Y;
-        DiscardLeftSide = (op2.Pt.X > op2b.Pt.X);
+        DiscardLeftSide = fuzzyGt(op2.Pt.X, op2b.Pt.X);
       }
-      else if (op1b.Pt.X >= Left && op1b.Pt.X <= Right)
+      else if (fuzzyGte(op1b.Pt.X, Left) && fuzzyLte(op1b.Pt.X, Right))
       {
         //Pt = op1b.Pt;
         Pt.X = op1b.Pt.X;
         Pt.Y = op1b.Pt.Y;
-        DiscardLeftSide = op1b.Pt.X > op1.Pt.X;
+        DiscardLeftSide = fuzzyGt(op1b.Pt.X, op1.Pt.X);
       }
       else
       {
         //Pt = op2b.Pt;
         Pt.X = op2b.Pt.X;
         Pt.Y = op2b.Pt.Y;
-        DiscardLeftSide = (op2b.Pt.X > op2.Pt.X);
+        DiscardLeftSide = fuzzyGt(op2b.Pt.X, op2.Pt.X);
       }
       j.OutPt1 = op1;
       j.OutPt2 = op2;
@@ -5524,25 +5524,25 @@
       op1b = op1.Next;
       while ((ClipperLib.IntPoint.op_Equality(op1b.Pt, op1.Pt)) && (op1b != op1))
         op1b = op1b.Next;
-      var Reverse1 = ((op1b.Pt.Y > op1.Pt.Y) || !ClipperLib.ClipperBase.SlopesEqual(op1.Pt, op1b.Pt, j.OffPt, this.m_UseFullRange));
+      var Reverse1 = (fuzzyGt(op1b.Pt.Y, op1.Pt.Y) || !ClipperLib.ClipperBase.SlopesEqual(op1.Pt, op1b.Pt, j.OffPt, this.m_UseFullRange));
       if (Reverse1)
       {
         op1b = op1.Prev;
         while ((ClipperLib.IntPoint.op_Equality(op1b.Pt, op1.Pt)) && (op1b != op1))
           op1b = op1b.Prev;
-        if ((op1b.Pt.Y > op1.Pt.Y) || !ClipperLib.ClipperBase.SlopesEqual(op1.Pt, op1b.Pt, j.OffPt, this.m_UseFullRange))
+        if (fuzzyGt(op1b.Pt.Y, op1.Pt.Y) || !ClipperLib.ClipperBase.SlopesEqual(op1.Pt, op1b.Pt, j.OffPt, this.m_UseFullRange))
           return false;
       }
       op2b = op2.Next;
       while ((ClipperLib.IntPoint.op_Equality(op2b.Pt, op2.Pt)) && (op2b != op2))
         op2b = op2b.Next;
-      var Reverse2 = ((op2b.Pt.Y > op2.Pt.Y) || !ClipperLib.ClipperBase.SlopesEqual(op2.Pt, op2b.Pt, j.OffPt, this.m_UseFullRange));
+      var Reverse2 = (fuzzyGt(op2b.Pt.Y, op2.Pt.Y) || !ClipperLib.ClipperBase.SlopesEqual(op2.Pt, op2b.Pt, j.OffPt, this.m_UseFullRange));
       if (Reverse2)
       {
         op2b = op2.Prev;
         while ((ClipperLib.IntPoint.op_Equality(op2b.Pt, op2.Pt)) && (op2b != op2))
           op2b = op2b.Prev;
-        if ((op2b.Pt.Y > op2.Pt.Y) || !ClipperLib.ClipperBase.SlopesEqual(op2.Pt, op2b.Pt, j.OffPt, this.m_UseFullRange))
+        if (fuzzyGt(op2b.Pt.Y, op2.Pt.Y) || !ClipperLib.ClipperBase.SlopesEqual(op2.Pt, op2b.Pt, j.OffPt, this.m_UseFullRange))
           return false;
       }
       if ((op1b == op1) || (op2b == op2) || (op1b == op2b) ||
@@ -5631,34 +5631,34 @@
     for (var i = 1; i <= cnt; ++i)
     {
       var ipNext = (i == cnt ? path[0] : path[i]);
-      if (ipNext.Y == pt.Y)
+      if (fuzzyEquals(ipNext.Y, pt.Y))
       {
-        if ((ipNext.X == pt.X) || (ip.Y == pt.Y && ((ipNext.X > pt.X) == (ip.X < pt.X))))
+        if (fuzzyEquals(ipNext.X, pt.X) || (fuzzyEquals(ip.Y, pt.Y) && (fuzzyGt(ipNext.X, pt.X) == fuzzyLt(ip.X, pt.X))))
           return -1;
       }
-      if ((ip.Y < pt.Y) != (ipNext.Y < pt.Y))
+      if (fuzzyLt(ip.Y, pt.Y) != fuzzyLt(ipNext.Y, pt.Y))
       {
-        if (ip.X >= pt.X)
+        if (fuzzyGte(ip.X, pt.X))
         {
-          if (ipNext.X > pt.X)
+          if (fuzzyGt(ipNext.X, pt.X))
             result = 1 - result;
           else
           {
             var d = (ip.X - pt.X) * (ipNext.Y - pt.Y) - (ipNext.X - pt.X) * (ip.Y - pt.Y);
-            if (d == 0)
+            if (fuzzyEquals(d, 0))
               return -1;
-            else if ((d > 0) == (ipNext.Y > ip.Y))
+            else if (fuzzyGt(d, 0) == fuzzyGt(ipNext.Y, ip.Y))
               result = 1 - result;
           }
         }
         else
         {
-          if (ipNext.X > pt.X)
+          if (fuzzyGt(ipNext.X, pt.X))
           {
             var d = (ip.X - pt.X) * (ipNext.Y - pt.Y) - (ipNext.X - pt.X) * (ip.Y - pt.Y);
-            if (d == 0)
+            if (fuzzyEquals(d, 0))
               return -1;
-            else if ((d > 0) == (ipNext.Y > ip.Y))
+            else if (fuzzyGt(d, 0) == fuzzyGt(ipNext.Y, ip.Y))
               result = 1 - result;
           }
         }
@@ -5680,34 +5680,34 @@
         poly0y = op.Pt.Y;
       var poly1x = op.Next.Pt.X,
         poly1y = op.Next.Pt.Y;
-      if (poly1y == pt.Y)
+      if (fuzzyEquals(poly1y, pt.Y))
       {
-        if ((poly1x == pt.X) || (poly0y == pt.Y && ((poly1x > pt.X) == (poly0x < pt.X))))
+        if (fuzzyEquals(poly1x, pt.X) || (fuzzyEquals(poly0y, pt.Y) && (fuzzyGt(poly1x, pt.X) == fuzzyLt(poly0x, pt.X))))
           return -1;
       }
-      if ((poly0y < pt.Y) != (poly1y < pt.Y))
+      if (fuzzyLt(poly0y, pt.Y) != fuzzyLt(poly1y, pt.Y))
       {
-        if (poly0x >= pt.X)
+        if (fuzzyGte(poly0x, pt.X))
         {
-          if (poly1x > pt.X)
+          if (fuzzyGt(poly1x, pt.X))
             result = 1 - result;
           else
           {
             var d = (poly0x - pt.X) * (poly1y - pt.Y) - (poly1x - pt.X) * (poly0y - pt.Y);
-            if (d == 0)
+            if (fuzzyEquals(d, 0))
               return -1;
-            if ((d > 0) == (poly1y > poly0y))
+            if (fuzzyGt(d, 0) == fuzzyGt(poly1y, poly0y))
               result = 1 - result;
           }
         }
         else
         {
-          if (poly1x > pt.X)
+          if (fuzzyGt(poly1x, pt.X))
           {
             var d = (poly0x - pt.X) * (poly1y - pt.Y) - (poly1x - pt.X) * (poly0y - pt.Y);
-            if (d == 0)
+            if (fuzzyEquals(d, 0))
               return -1;
-            if ((d > 0) == (poly1y > poly0y))
+            if (fuzzyGt(d, 0) == fuzzyGt(poly1y, poly0y))
               result = 1 - result;
           }
         }
@@ -5999,7 +5999,7 @@
   {
     var dx = pt1.X - pt2.X;
     var dy = pt1.Y - pt2.Y;
-    return ((dx * dx) + (dy * dy) <= distSqrd);
+    return fuzzyLte((dx * dx) + (dy * dy), distSqrd);
   };
   //------------------------------------------------------------------------------
   ClipperLib.Clipper.ExcludeOp = function (op)
@@ -6246,7 +6246,7 @@
       {
         j++;
         newNode.m_polygon.push(path[i]);
-        if (path[i].Y > newNode.m_polygon[k].Y || (path[i].Y == newNode.m_polygon[k].Y && path[i].X < newNode.m_polygon[k].X))
+        if (fuzzyGt(path[i].Y, newNode.m_polygon[k].Y) || (fuzzyEquals(path[i].Y, newNode.m_polygon[k].Y) && fuzzyLt(path[i].X, newNode.m_polygon[k].X)))
           k = j;
       }
     if ((endType == ClipperLib.EndType.etClosedPolygon && j < 2) || (endType != ClipperLib.EndType.etClosedPolygon && j < 0))
@@ -6260,7 +6260,7 @@
     else
     {
       var ip = this.m_polyNodes.Childs()[this.m_lowest.X].m_polygon[this.m_lowest.Y];
-      if (newNode.m_polygon[k].Y > ip.Y || (newNode.m_polygon[k].Y == ip.Y && newNode.m_polygon[k].X < ip.X))
+      if (fuzzyGt(newNode.m_polygon[k].Y, ip.Y) || (fuzzyEquals(newNode.m_polygon[k].Y, ip.Y) && fuzzyLt(newNode.m_polygon[k].X, ip.X)))
         this.m_lowest = new ClipperLib.IntPoint(this.m_polyNodes.ChildCount() - 1, k);
     }
   };
@@ -6273,7 +6273,7 @@
   {
     //fixup orientations of all closed paths if the orientation of the
     //closed path with the lowermost vertex is wrong ...
-    if (this.m_lowest.X >= 0 && !ClipperLib.Clipper.Orientation(this.m_polyNodes.Childs()[this.m_lowest.X].m_polygon))
+    if (fuzzyGte(this.m_lowest.X, 0) && !ClipperLib.Clipper.Orientation(this.m_polyNodes.Childs()[this.m_lowest.X].m_polygon))
     {
       for (var i = 0; i < this.m_polyNodes.ChildCount(); i++)
       {
