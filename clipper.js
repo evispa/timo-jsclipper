@@ -145,6 +145,26 @@
     return Math.abs(a - b) <= eps;
   }
 
+  function fuzzyGt(a, b, eps) {
+    eps = eps || DEFAULT_EPS;
+    return (a - b) > 0 && Math.abs(a - b) > eps;
+  }
+
+  function fuzzyLt(a, b, eps) {
+    eps = eps || DEFAULT_EPS;
+    return !fuzzyGt(a, b, eps) && !fuzzyEquals(a, b, eps);
+  }
+
+  function fuzzyGte(a, b, eps) {
+    eps = eps || DEFAULT_EPS;
+    return fuzzyGt(a, b, eps) || fuzzyEquals(a, b, eps);
+  }
+
+  function fuzzyLte(a, b, eps) {
+    eps = eps || DEFAULT_EPS;
+    return fuzzyLt(a, b, eps) || fuzzyEquals(a, b, eps);
+  }
+
   // (public) Constructor
   function BigInteger(a, b, c)
   {
@@ -2384,7 +2404,7 @@
   };
   ClipperLib.ClipperBase.IsHorizontal = function (e)
   {
-    return e.Delta.Y === 0;
+    return fuzzyEquals(e.Delta.Y, 0);
   };
   ClipperLib.ClipperBase.prototype.PointIsVertex = function (pt, pp)
   {
@@ -2529,7 +2549,7 @@
   };
   ClipperLib.ClipperBase.prototype.InitEdge2 = function (e, polyType)
   {
-    if (e.Curr.Y >= e.Next.Curr.Y)
+    if (fuzzyGte(e.Curr.Y, e.Next.Curr.Y))
     {
       //e.Bot = e.Curr;
       e.Bot.X = e.Curr.X;
@@ -3081,9 +3101,9 @@
     else
     {
       var sb2 = this.m_Scanbeam;
-      while (sb2.Next !== null && (Y <= sb2.Next.Y))
+      while (sb2.Next !== null && (fuzzyLte(Y, sb2.Next.Y)))
         sb2 = sb2.Next;
-      if (Y == sb2.Y)
+      if (fuzzyEquals(Y, sb2.Y))
         return;
       //ie ignores duplicates
       var newSb = new ClipperLib.Scanbeam();
@@ -3297,7 +3317,7 @@
   }
   ClipperLib.Clipper.prototype.InsertLocalMinimaIntoAEL = function (botY)
   {
-    while (this.m_CurrentLM !== null && (this.m_CurrentLM.Y == botY))
+    while (this.m_CurrentLM !== null && (fuzzyEquals(this.m_CurrentLM.Y, botY)))
     {
       var lb = this.m_CurrentLM.LeftBound;
       var rb = this.m_CurrentLM.RightBound;
@@ -3350,7 +3370,7 @@
         }
       }
       if (lb.OutIdx >= 0 && lb.PrevInAEL !== null &&
-        lb.PrevInAEL.Curr.X == lb.Bot.X &&
+        fuzzyEquals(lb.PrevInAEL.Curr.X, lb.Bot.X) &&
         lb.PrevInAEL.OutIdx >= 0 &&
         ClipperLib.ClipperBase.SlopesEqual(lb.PrevInAEL, lb, this.m_UseFullRange) &&
         lb.WindDelta !== 0 && lb.PrevInAEL.WindDelta !== 0)
@@ -3410,15 +3430,15 @@
   };
   ClipperLib.Clipper.prototype.E2InsertsBeforeE1 = function (e1, e2)
   {
-    if (e2.Curr.X == e1.Curr.X)
+    if (fuzzyEquals(e2.Curr.X, e1.Curr.X))
     {
-      if (e2.Top.Y > e1.Top.Y)
-        return e2.Top.X < ClipperLib.Clipper.TopX(e1, e2.Top.Y);
+      if (fuzzyGt(e2.Top.Y, e1.Top.Y))
+        return fuzzyLt(e2.Top.X, ClipperLib.Clipper.TopX(e1, e2.Top.Y));
       else
-        return e1.Top.X > ClipperLib.Clipper.TopX(e2, e1.Top.Y);
+        return fuzzyGt(e1.Top.X, ClipperLib.Clipper.TopX(e2, e1.Top.Y));
     }
     else
-      return e2.Curr.X < e1.Curr.X;
+      return fuzzyLt(e2.Curr.X, e1.Curr.X);
   };
   ClipperLib.Clipper.prototype.IsEvenOddFillType = function (edge)
   {
@@ -4708,11 +4728,11 @@
   };
   ClipperLib.Clipper.prototype.IsMaxima = function (e, Y)
   {
-    return (e !== null && e.Top.Y == Y && e.NextInLML === null);
+    return (e !== null && fuzzyEquals(e.Top.Y, Y) && e.NextInLML === null);
   };
   ClipperLib.Clipper.prototype.IsIntermediate = function (e, Y)
   {
-    return (e.Top.Y == Y && e.NextInLML !== null);
+    return (fuzzyEquals(e.Top.Y, Y) && e.NextInLML !== null);
   };
   ClipperLib.Clipper.prototype.GetMaximaPair = function (e)
   {
@@ -4893,7 +4913,7 @@
   {
     //if (edge.Bot == edge.Curr) alert ("edge.Bot = edge.Curr");
     //if (edge.Bot == edge.Top) alert ("edge.Bot = edge.Top");
-    if (currentY == edge.Top.Y)
+    if (fuzzyEquals(currentY, edge.Top.Y))
       return edge.Top.X;
     return edge.Bot.X + ClipperLib.Clipper.Round(edge.Dx * (currentY - edge.Bot.Y));
   };
@@ -4904,7 +4924,7 @@
     var b1, b2;
     //nb: with very large coordinate values, it's possible for SlopesEqual() to
     //return false but for the edge.Dx value be equal due to double precision rounding.
-    if (ClipperLib.ClipperBase.SlopesEqual(edge1, edge2, this.m_UseFullRange) || edge1.Dx == edge2.Dx)
+    if (ClipperLib.ClipperBase.SlopesEqual(edge1, edge2, this.m_UseFullRange) || fuzzyEquals(edge1.Dx, edge2.Dx))
     {
       if (edge2.Bot.Y > edge1.Bot.Y)
       {
@@ -4918,7 +4938,7 @@
       }
       return false;
     }
-    else if (edge1.Delta.X === 0)
+    else if (fuzzyEquals(edge1.Delta.X, 0))
     {
       ip.X = edge1.Bot.X;
       if (ClipperLib.ClipperBase.IsHorizontal(edge2))
@@ -4931,7 +4951,7 @@
         ip.Y = ClipperLib.Clipper.Round(ip.X / edge2.Dx + b2);
       }
     }
-    else if (edge2.Delta.X === 0)
+    else if (fuzzyEquals(edge2.Delta.X, 0))
     {
       ip.X = edge2.Bot.X;
       if (ClipperLib.ClipperBase.IsHorizontal(edge1))
@@ -5013,7 +5033,7 @@
         {
           var ePrev = e.PrevInAEL;
           if ((e.OutIdx >= 0) && (e.WindDelta !== 0) && ePrev !== null &&
-            (ePrev.OutIdx >= 0) && (ePrev.Curr.X == e.Curr.X) &&
+            (ePrev.OutIdx >= 0) && (fuzzyEquals(ePrev.Curr.X, e.Curr.X)) &&
             (ePrev.WindDelta !== 0))
           {
             var op = this.AddOutPt(ePrev, e.Curr);
@@ -5040,8 +5060,8 @@
         //if output polygons share an edge, they'll need joining later ...
         var ePrev = e.PrevInAEL;
         var eNext = e.NextInAEL;
-        if (ePrev !== null && ePrev.Curr.X == e.Bot.X &&
-          ePrev.Curr.Y == e.Bot.Y && op !== null &&
+        if (ePrev !== null && fuzzyEquals(ePrev.Curr.X == e.Bot.X) &&
+        fuzzyEquals(ePrev.Curr.Y, e.Bot.Y) && op !== null &&
           ePrev.OutIdx >= 0 && ePrev.Curr.Y > ePrev.Top.Y &&
           ClipperLib.ClipperBase.SlopesEqual(e, ePrev, this.m_UseFullRange) &&
           (e.WindDelta !== 0) && (ePrev.WindDelta !== 0))
@@ -5049,8 +5069,8 @@
           var op2 = this.AddOutPt(ePrev, e.Bot);
           this.AddJoin(op, op2, e.Top);
         }
-        else if (eNext !== null && eNext.Curr.X == e.Bot.X &&
-          eNext.Curr.Y == e.Bot.Y && op !== null &&
+        else if (eNext !== null && fuzzyEquals(eNext.Curr.X == e.Bot.X) &&
+          fuzzyEquals(eNext.Curr.Y == e.Bot.Y) && op !== null &&
           eNext.OutIdx >= 0 && eNext.Curr.Y > eNext.Top.Y &&
           ClipperLib.ClipperBase.SlopesEqual(e, eNext, this.m_UseFullRange) &&
           (e.WindDelta !== 0) && (eNext.WindDelta !== 0))
@@ -6276,7 +6296,7 @@
   {
     var dx = (pt2.X - pt1.X);
     var dy = (pt2.Y - pt1.Y);
-    if ((dx == 0) && (dy == 0))
+    if (fuzzyEquals(dx, 0) && fuzzyEquals(dy, 0))
       return new ClipperLib.DoublePoint(0, 0);
     var f = 1 / Math.sqrt(dx * dx + dy * dy);
     dx *= f;
