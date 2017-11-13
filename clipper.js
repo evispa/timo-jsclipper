@@ -4030,14 +4030,14 @@
     var p = pp.Next;
     while (p != pp)
     {
-      if (p.Pt.Y > pp.Pt.Y)
+      if (fuzzyGt(p.Pt.Y, pp.Pt.Y))
       {
         pp = p;
         dups = null;
       }
-      else if (p.Pt.Y == pp.Pt.Y && p.Pt.X <= pp.Pt.X)
+      else if (fuzzyEquals(p.Pt.Y, pp.Pt.Y) && fuzzyLte(p.Pt.X, pp.Pt.X))
       {
-        if (p.Pt.X < pp.Pt.X)
+        if (fuzzyLt(p.Pt.X, pp.Pt.X))
         {
           dups = null;
           pp = p;
@@ -4073,13 +4073,13 @@
       outRec2.BottomPt = this.GetBottomPt(outRec2.Pts);
     var bPt1 = outRec1.BottomPt;
     var bPt2 = outRec2.BottomPt;
-    if (bPt1.Pt.Y > bPt2.Pt.Y)
+    if (fuzzyGt(bPt1.Pt.Y, bPt2.Pt.Y))
       return outRec1;
-    else if (bPt1.Pt.Y < bPt2.Pt.Y)
+    else if (fuzzyLt(bPt1.Pt.Y, bPt2.Pt.Y))
       return outRec2;
-    else if (bPt1.Pt.X < bPt2.Pt.X)
+    else if (fuzzyLt(bPt1.Pt.X, bPt2.Pt.X))
       return outRec1;
-    else if (bPt1.Pt.X > bPt2.Pt.X)
+    else if (fuzzyGt(bPt1.Pt.X, bPt2.Pt.X))
       return outRec2;
     else if (bPt1.Next == bPt1)
       return outRec2;
@@ -4229,9 +4229,9 @@
     //e1 will be to the left of e2 BELOW the intersection. Therefore e1 is before
     //e2 in AEL except when e1 is being inserted at the intersection point ...
     var e1stops = !protect && e1.NextInLML === null &&
-      e1.Top.X == pt.X && e1.Top.Y == pt.Y;
+      fuzzyEquals(e1.Top.X, pt.X) && fuzzyEquals(e1.Top.Y, pt.Y);
     var e2stops = !protect && e2.NextInLML === null &&
-      e2.Top.X == pt.X && e2.Top.Y == pt.Y;
+      fuzzyEquals(e2.Top.X, pt.X) && fuzzyEquals(e2.Top.Y, pt.Y);
     var e1Contributing = (e1.OutIdx >= 0);
     var e2Contributing = (e2.OutIdx >= 0);
     if (use_lines)
