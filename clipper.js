@@ -2327,7 +2327,7 @@
   ClipperLib.MyIntersectNodeSort = function () {};
   ClipperLib.MyIntersectNodeSort.Compare = function (node1, node2)
   {
-    return (node2.Pt.Y - node1.Pt.Y);
+    return Number((node2.Pt.Y - node1.Pt.Y).toFixed(6));
   };
   ClipperLib.LocalMinima = function ()
   {
@@ -2420,14 +2420,14 @@
   ClipperLib.ClipperBase.prototype.PointOnLineSegment = function (pt, linePt1, linePt2, UseFullRange)
   {
     if (UseFullRange)
-      return ((pt.X == linePt1.X) && (pt.Y == linePt1.Y)) ||
-        ((pt.X == linePt2.X) && (pt.Y == linePt2.Y)) ||
-        (((pt.X > linePt1.X) == (pt.X < linePt2.X)) &&
-        ((pt.Y > linePt1.Y) == (pt.Y < linePt2.Y)) &&
+      return (fuzzyEquals(pt.X, linePt1.X) && fuzzyEquals(pt.Y, linePt1.Y)) ||
+        (fuzzyEquals(pt.X, linePt2.X) && fuzzyEquals(pt.Y, linePt2.Y)) ||
+        ((fuzzyGt(pt.X, linePt1.X) == fuzzyLt(pt.X, linePt2.X)) &&
+        (fuzzyGt(pt.Y, linePt1.Y) == fuzzyLt(pt.Y, linePt2.Y)) &&
         (Int128.op_Equality(Int128.Int128Mul((pt.X - linePt1.X), (linePt2.Y - linePt1.Y)),
           Int128.Int128Mul((linePt2.X - linePt1.X), (pt.Y - linePt1.Y)))));
     else
-      return ((pt.X == linePt1.X) && (pt.Y == linePt1.Y)) || ((pt.X == linePt2.X) && (pt.Y == linePt2.Y)) || (((pt.X > linePt1.X) == (pt.X < linePt2.X)) && ((pt.Y > linePt1.Y) == (pt.Y < linePt2.Y)) && ((pt.X - linePt1.X) * (linePt2.Y - linePt1.Y) == (linePt2.X - linePt1.X) * (pt.Y - linePt1.Y)));
+      return (fuzzyEquals(pt.X, linePt1.X) && fuzzyEquals(pt.Y, linePt1.Y)) || (fuzzyEquals(pt.X, linePt2.X) && fuzzyEquals(pt.Y, linePt2.Y)) || ((fuzzyGt(pt.X, linePt1.X) == fuzzyLt(pt.X, linePt2.X)) && (fuzzyGt(pt.Y, linePt1.Y) == fuzzyLt(pt.Y, linePt2.Y)) && fuzzyEquals((pt.X - linePt1.X) * (linePt2.Y - linePt1.Y), (linePt2.X - linePt1.X) * (pt.Y - linePt1.Y)));
   };
   ClipperLib.ClipperBase.prototype.PointOnPolygon = function (pt, pp, UseFullRange)
   {
@@ -2455,7 +2455,7 @@
       if (UseFullRange)
         return Int128.op_Equality(Int128.Int128Mul(e1.Delta.Y, e2.Delta.X), Int128.Int128Mul(e1.Delta.X, e2.Delta.Y));
       else
-        return ClipperLib.Cast_Int64((e1.Delta.Y) * (e2.Delta.X)) == ClipperLib.Cast_Int64((e1.Delta.X) * (e2.Delta.Y));
+        return fuzzyEquals(ClipperLib.Cast_Int64((e1.Delta.Y) * (e2.Delta.X)), ClipperLib.Cast_Int64((e1.Delta.X) * (e2.Delta.Y)));
     }
     else if (alen == 4) // function (pt1, pt2, pt3, UseFullRange)
     {
@@ -2466,7 +2466,7 @@
       if (UseFullRange)
         return Int128.op_Equality(Int128.Int128Mul(pt1.Y - pt2.Y, pt2.X - pt3.X), Int128.Int128Mul(pt1.X - pt2.X, pt2.Y - pt3.Y));
       else
-        return ClipperLib.Cast_Int64((pt1.Y - pt2.Y) * (pt2.X - pt3.X)) - ClipperLib.Cast_Int64((pt1.X - pt2.X) * (pt2.Y - pt3.Y)) === 0;
+        return fuzzyEquals(ClipperLib.Cast_Int64((pt1.Y - pt2.Y) * (pt2.X - pt3.X)) - ClipperLib.Cast_Int64((pt1.X - pt2.X) * (pt2.Y - pt3.Y)), 0);
     }
     else // function (pt1, pt2, pt3, pt4, UseFullRange)
     {
@@ -2478,7 +2478,7 @@
       if (UseFullRange)
         return Int128.op_Equality(Int128.Int128Mul(pt1.Y - pt2.Y, pt3.X - pt4.X), Int128.Int128Mul(pt1.X - pt2.X, pt3.Y - pt4.Y));
       else
-        return ClipperLib.Cast_Int64((pt1.Y - pt2.Y) * (pt3.X - pt4.X)) - ClipperLib.Cast_Int64((pt1.X - pt2.X) * (pt3.Y - pt4.Y)) === 0;
+        return fuzzyEquals(ClipperLib.Cast_Int64((pt1.Y - pt2.Y) * (pt3.X - pt4.X)) - ClipperLib.Cast_Int64((pt1.X - pt2.X) * (pt3.Y - pt4.Y)), 0);
     }
   };
   ClipperLib.ClipperBase.SlopesEqual3 = function (e1, e2, UseFullRange)
@@ -2486,21 +2486,21 @@
     if (UseFullRange)
       return Int128.op_Equality(Int128.Int128Mul(e1.Delta.Y, e2.Delta.X), Int128.Int128Mul(e1.Delta.X, e2.Delta.Y));
     else
-      return ClipperLib.Cast_Int64((e1.Delta.Y) * (e2.Delta.X)) == ClipperLib.Cast_Int64((e1.Delta.X) * (e2.Delta.Y));
+      return fuzzyEquals(ClipperLib.Cast_Int64((e1.Delta.Y) * (e2.Delta.X)), ClipperLib.Cast_Int64((e1.Delta.X) * (e2.Delta.Y)));
   };
   ClipperLib.ClipperBase.SlopesEqual4 = function (pt1, pt2, pt3, UseFullRange)
   {
     if (UseFullRange)
       return Int128.op_Equality(Int128.Int128Mul(pt1.Y - pt2.Y, pt2.X - pt3.X), Int128.Int128Mul(pt1.X - pt2.X, pt2.Y - pt3.Y));
     else
-      return ClipperLib.Cast_Int64((pt1.Y - pt2.Y) * (pt2.X - pt3.X)) - ClipperLib.Cast_Int64((pt1.X - pt2.X) * (pt2.Y - pt3.Y)) === 0;
+      return fuzzyEquals(ClipperLib.Cast_Int64((pt1.Y - pt2.Y) * (pt2.X - pt3.X)) - ClipperLib.Cast_Int64((pt1.X - pt2.X) * (pt2.Y - pt3.Y)), 0);
   };
   ClipperLib.ClipperBase.SlopesEqual5 = function (pt1, pt2, pt3, pt4, UseFullRange)
   {
     if (UseFullRange)
       return Int128.op_Equality(Int128.Int128Mul(pt1.Y - pt2.Y, pt3.X - pt4.X), Int128.Int128Mul(pt1.X - pt2.X, pt3.Y - pt4.Y));
     else
-      return ClipperLib.Cast_Int64((pt1.Y - pt2.Y) * (pt3.X - pt4.X)) - ClipperLib.Cast_Int64((pt1.X - pt2.X) * (pt3.Y - pt4.Y)) === 0;
+      return fuzzyEquals(ClipperLib.Cast_Int64((pt1.Y - pt2.Y) * (pt3.X - pt4.X)) - ClipperLib.Cast_Int64((pt1.X - pt2.X) * (pt3.Y - pt4.Y)), 0);
   };
   ClipperLib.ClipperBase.prototype.Clear = function ()
   {
@@ -2584,10 +2584,10 @@
       E2 = E;
       while (E.Dx == ClipperLib.ClipperBase.horizontal)
         E = E.Next;
-      if (E.Top.Y == E.Prev.Bot.Y)
+      if (fuzzyEquals(E.Top.Y, E.Prev.Bot.Y))
         continue;
       //ie just an intermediate horz.
-      if (E2.Prev.Bot.X < E.Bot.X)
+      if (fuzzyLt(E2.Prev.Bot.X, E.Bot.X))
         E = E2;
       break;
     }
@@ -2819,7 +2819,7 @@
     do {
       this.InitEdge2(E, polyType);
       E = E.Next;
-      if (IsFlat && E.Curr.Y != eStart.Curr.Y)
+      if (IsFlat && !fuzzyEquals(E.Curr.Y, eStart.Curr.Y))
         IsFlat = false;
     }
     while (E != eStart)
@@ -2831,7 +2831,7 @@
       if (Closed)
         return false;
       E.Prev.OutIdx = ClipperLib.ClipperBase.Skip;
-      if (E.Prev.Bot.X < E.Prev.Top.X)
+      if (fuzzyLt(E.Prev.Bot.X, E.Prev.Top.X))
         this.ReverseHorizontal(E.Prev);
       var locMin = new ClipperLib.LocalMinima();
       locMin.Next = null;
@@ -2843,7 +2843,7 @@
       while (E.Next.OutIdx != ClipperLib.ClipperBase.Skip)
       {
         E.NextInLML = E.Next;
-        if (E.Bot.X != E.Prev.Top.X)
+        if (!fuzzyEquals(E.Bot.X, E.Prev.Top.X))
           this.ReverseHorizontal(E);
         E = E.Next;
       }
@@ -2866,7 +2866,7 @@
       var locMin = new ClipperLib.LocalMinima();
       locMin.Next = null;
       locMin.Y = E.Bot.Y;
-      if (E.Dx < E.Prev.Dx)
+      if (fuzzyLt(E.Dx, E.Prev.Dx))
       {
         locMin.LeftBound = E.Prev;
         locMin.RightBound = E;
@@ -2917,10 +2917,10 @@
     if ((ClipperLib.IntPoint.op_Equality(pt1, pt3)) || (ClipperLib.IntPoint.op_Equality(pt1, pt2)) ||
       (ClipperLib.IntPoint.op_Equality(pt3, pt2)))
       return false;
-    else if (pt1.X != pt3.X)
-      return (pt2.X > pt1.X) == (pt2.X < pt3.X);
+    else if (!fuzzyEquals(pt1.X, pt3.X))
+      return fuzzyGt(pt2.X, pt1.X) == fuzzyLt(pt2.X, pt3.X);
     else
-      return (pt2.Y > pt1.Y) == (pt2.Y < pt3.Y);
+      return fuzzyGt(pt2.Y, pt1.Y) == fuzzyLt(pt2.Y, pt3.Y);
   };
   ClipperLib.ClipperBase.prototype.RemoveEdge = function (e)
   {
@@ -2944,7 +2944,7 @@
     {
       this.m_MinimaList = newLm;
     }
-    else if (newLm.Y >= this.m_MinimaList.Y)
+    else if (fuzzyGte(newLm.Y, this.m_MinimaList.Y))
     {
       newLm.Next = this.m_MinimaList;
       this.m_MinimaList = newLm;
@@ -2952,7 +2952,7 @@
     else
     {
       var tmpLm = this.m_MinimaList;
-      while (tmpLm.Next !== null && (newLm.Y < tmpLm.Next.Y))
+      while (tmpLm.Next !== null && fuzzyLt(newLm.Y, tmpLm.Next.Y))
         tmpLm = tmpLm.Next;
       newLm.Next = tmpLm.Next;
       tmpLm.Next = newLm;
@@ -3225,7 +3225,7 @@
         var outRec = this.m_PolyOuts[i];
         if (outRec.Pts === null || outRec.IsOpen)
           continue;
-        if ((outRec.IsHole ^ this.ReverseSolution) == (this.Area(outRec) > 0))
+        if ((outRec.IsHole ^ this.ReverseSolution) == (fuzzyGt(this.Area(outRec), 0)))
           this.ReversePolyPtLinks(outRec.Pts);
       }
       this.JoinCommonEdges();
@@ -3373,7 +3373,7 @@
         fuzzyEquals(lb.PrevInAEL.Curr.X, lb.Bot.X) &&
         lb.PrevInAEL.OutIdx >= 0 &&
         ClipperLib.ClipperBase.SlopesEqual(lb.PrevInAEL, lb, this.m_UseFullRange) &&
-        lb.WindDelta !== 0 && lb.PrevInAEL.WindDelta !== 0)
+        !fuzzyEquals(lb.WindDelta, 0) && !fuzzyEquals(lb.PrevInAEL.WindDelta, 0))
       {
         var Op2 = this.AddOutPt(lb.PrevInAEL, lb.Bot);
         this.AddJoin(Op1, Op2, lb.Top);
@@ -3382,7 +3382,7 @@
       {
         if (rb.OutIdx >= 0 && rb.PrevInAEL.OutIdx >= 0 &&
           ClipperLib.ClipperBase.SlopesEqual(rb.PrevInAEL, rb, this.m_UseFullRange) &&
-          rb.WindDelta !== 0 && rb.PrevInAEL.WindDelta !== 0)
+          !fuzzyEquals(rb.WindDelta, 0) && !fuzzyEquals(rb.PrevInAEL.WindDelta, 0))
         {
           var Op2 = this.AddOutPt(rb.PrevInAEL, rb.Bot);
           this.AddJoin(Op1, Op2, rb.Top);
@@ -3470,7 +3470,7 @@
     switch (pft)
     {
     case ClipperLib.PolyFillType.pftEvenOdd:
-      if (edge.WindDelta === 0 && edge.WindCnt != 1)
+      if (fuzzyEquals(edge.WindDelta, 0) && edge.WindCnt != 1)
         return false;
       break;
     case ClipperLib.PolyFillType.pftNonZero:
@@ -3554,16 +3554,16 @@
   {
     var e = edge.PrevInAEL;
     //find the edge of the same polytype that immediately preceeds 'edge' in AEL
-    while (e !== null && ((e.PolyTyp != edge.PolyTyp) || (e.WindDelta === 0)))
+    while (e !== null && ((e.PolyTyp != edge.PolyTyp) || (fuzzyEquals(e.WindDelta, 0))))
       e = e.PrevInAEL;
     if (e === null)
     {
-      edge.WindCnt = (edge.WindDelta === 0 ? 1 : edge.WindDelta);
+      edge.WindCnt = (fuzzyEquals(edge.WindDelta, 0) ? 1 : edge.WindDelta);
       edge.WindCnt2 = 0;
       e = this.m_ActiveEdges;
       //ie get ready to calc WindCnt2
     }
-    else if (edge.WindDelta === 0 && this.m_ClipType != ClipperLib.ClipType.ctUnion)
+    else if (fuzzyEquals(edge.WindDelta, 0) && this.m_ClipType != ClipperLib.ClipType.ctUnion)
     {
       edge.WindCnt = 1;
       edge.WindCnt2 = e.WindCnt2;
@@ -3573,14 +3573,14 @@
     else if (this.IsEvenOddFillType(edge))
     {
       //EvenOdd filling ...
-      if (edge.WindDelta === 0)
+      if (fuzzyEquals(edge.WindDelta, 0))
       {
         //are we inside a subj polygon ...
         var Inside = true;
         var e2 = e.PrevInAEL;
         while (e2 !== null)
         {
-          if (e2.PolyTyp == e.PolyTyp && e2.WindDelta !== 0)
+          if (e2.PolyTyp == e.PolyTyp && !fuzzyEquals(e2.WindDelta, 0))
             Inside = !Inside;
           e2 = e2.PrevInAEL;
         }
@@ -3597,7 +3597,7 @@
     else
     {
       //nonZero, Positive or Negative filling ...
-      if (e.WindCnt * e.WindDelta < 0)
+      if (fuzzyLt(e.WindCnt * e.WindDelta, 0))
       {
         //prev edge is 'decreasing' WindCount (WC) toward zero
         //so we're outside the previous polygon ...
@@ -3605,21 +3605,21 @@
         {
           //outside prev poly but still inside another.
           //when reversing direction of prev poly use the same WC
-          if (e.WindDelta * edge.WindDelta < 0)
+          if (fuzzyLt(e.WindDelta * edge.WindDelta, 0))
             edge.WindCnt = e.WindCnt;
           else
             edge.WindCnt = e.WindCnt + edge.WindDelta;
         }
         else
-          edge.WindCnt = (edge.WindDelta === 0 ? 1 : edge.WindDelta);
+          edge.WindCnt = (fuzzyEquals(edge.WindDelta, 0) ? 1 : edge.WindDelta);
       }
       else
       {
         //prev edge is 'increasing' WindCount (WC) away from zero
         //so we're inside the previous polygon ...
-        if (edge.WindDelta === 0)
+        if (fuzzyEquals(edge.WindDelta, 0))
           edge.WindCnt = (e.WindCnt < 0 ? e.WindCnt - 1 : e.WindCnt + 1);
-        else if (e.WindDelta * edge.WindDelta < 0)
+        else if (fuzzyLt(e.WindDelta * edge.WindDelta, 0))
           edge.WindCnt = e.WindCnt;
         else
           edge.WindCnt = e.WindCnt + edge.WindDelta;
@@ -3634,7 +3634,7 @@
       //EvenOdd filling ...
       while (e != edge)
       {
-        if (e.WindDelta !== 0)
+        if (!fuzzyEquals(e.WindDelta, 0))
           edge.WindCnt2 = (edge.WindCnt2 === 0 ? 1 : 0);
         e = e.NextInAEL;
       }
@@ -3788,7 +3788,7 @@
   ClipperLib.Clipper.prototype.AddLocalMaxPoly = function (e1, e2, pt)
   {
     this.AddOutPt(e1, pt);
-    if (e2.WindDelta == 0) this.AddOutPt(e2, pt);
+    if (fuzzyEquals(e2.WindDelta, 0)) this.AddOutPt(e2, pt);
     if (e1.OutIdx == e2.OutIdx)
     {
       e1.OutIdx = -1;
@@ -3803,7 +3803,7 @@
   {
     var result;
     var e, prevE;
-    if (ClipperLib.ClipperBase.IsHorizontal(e2) || (e1.Dx > e2.Dx))
+    if (ClipperLib.ClipperBase.IsHorizontal(e2) || (fuzzyGt(e1.Dx, e2.Dx)))
     {
       result = this.AddOutPt(e1, pt);
       e2.OutIdx = e1.OutIdx;
@@ -3827,7 +3827,7 @@
       else
         prevE = e.PrevInAEL;
     }
-    if (prevE !== null && prevE.OutIdx >= 0 && (ClipperLib.Clipper.TopX(prevE, pt.Y) == ClipperLib.Clipper.TopX(e, pt.Y)) && ClipperLib.ClipperBase.SlopesEqual(e, prevE, this.m_UseFullRange) && (e.WindDelta !== 0) && (prevE.WindDelta !== 0))
+    if (prevE !== null && prevE.OutIdx >= 0 && fuzzyEquals(ClipperLib.Clipper.TopX(prevE, pt.Y), ClipperLib.Clipper.TopX(e, pt.Y)) && ClipperLib.ClipperBase.SlopesEqual(e, prevE, this.m_UseFullRange) && !fuzzyEquals(e.WindDelta, 0) && !fuzzyEquals(prevE.WindDelta, 0))
     {
       var outPt = this.AddOutPt(prevE, pt);
       this.AddJoin(result, outPt, e.Top);
@@ -3854,7 +3854,7 @@
     if (e.OutIdx < 0)
     {
       var outRec = this.CreateOutRec();
-      outRec.IsOpen = (e.WindDelta === 0);
+      outRec.IsOpen = fuzzyEquals(e.WindDelta, 0);
       var newOp = new ClipperLib.OutPt();
       outRec.Pts = newOp;
       newOp.Idx = outRec.Idx;
@@ -3943,17 +3943,17 @@
   ClipperLib.Clipper.prototype.HorzSegmentsOverlap = function (Pt1a, Pt1b, Pt2a, Pt2b)
   {
     //precondition: both segments are horizontal
-    if ((Pt1a.X > Pt2a.X) == (Pt1a.X < Pt2b.X))
+    if (fuzzyGt(Pt1a.X, Pt2a.X) == fuzzyLt(Pt1a.X, Pt2b.X))
       return true;
-    else if ((Pt1b.X > Pt2a.X) == (Pt1b.X < Pt2b.X))
+    else if (fuzzyGt(Pt1b.X, Pt2a.X) == fuzzyLt(Pt1b.X, Pt2b.X))
       return true;
-    else if ((Pt2a.X > Pt1a.X) == (Pt2a.X < Pt1b.X))
+    else if (fuzzyGt(Pt2a.X, Pt1a.X) == fuzzyLt(Pt2a.X, Pt1b.X))
       return true;
-    else if ((Pt2b.X > Pt1a.X) == (Pt2b.X < Pt1b.X))
+    else if (fuzzyGt(Pt2b.X, Pt1a.X) == fuzzyLt(Pt2b.X, Pt1b.X))
       return true;
-    else if ((Pt1a.X == Pt2a.X) && (Pt1b.X == Pt2b.X))
+    else if (fuzzyEquals(Pt1a.X, Pt2a.X) && fuzzyEquals(Pt1b.X, Pt2b.X))
       return true;
-    else if ((Pt1a.X == Pt2b.X) && (Pt1b.X == Pt2a.X))
+    else if (fuzzyEquals(Pt1a.X, Pt2b.X) && fuzzyEquals(Pt1b.X, Pt2a.X))
       return true;
     else
       return false;
@@ -3986,7 +3986,7 @@
     var e2 = e.PrevInAEL;
     while (e2 !== null)
     {
-      if (e2.OutIdx >= 0 && e2.WindDelta != 0)
+      if (e2.OutIdx >= 0 && !fuzzyEquals(e2.WindDelta, 0))
       {
         isHole = !isHole;
         if (outRec.FirstLeft === null)
@@ -4022,7 +4022,7 @@
     while ((ClipperLib.IntPoint.op_Equality(p.Pt, btmPt2.Pt)) && (p != btmPt2))
       p = p.Next;
     var dx2n = Math.abs(this.GetDx(btmPt2.Pt, p.Pt));
-    return (dx1p >= dx2p && dx1p >= dx2n) || (dx1n >= dx2p && dx1n >= dx2n);
+    return (fuzzyGte(dx1p, dx2p) && fuzzyGte(dx1p, dx2n)) || (fuzzyGte(dx1n, dx2p) && fuzzyGte(dx1n, dx2n));
   };
   ClipperLib.Clipper.prototype.GetBottomPt = function (pp)
   {
