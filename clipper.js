@@ -2607,14 +2607,14 @@
         StartX = E.Prev.Bot.X;
       else
         StartX = E.Next.Bot.X;
-      if (E.Bot.X != StartX)
+      if (!fuzzyEquals(E.Bot.X, StartX))
         this.ReverseHorizontal(E);
     }
     if (Result.OutIdx != ClipperLib.ClipperBase.Skip)
     {
       if (IsClockwise)
       {
-        while (Result.Top.Y == Result.Next.Bot.Y && Result.Next.OutIdx != ClipperLib.ClipperBase.Skip)
+        while (fuzzyEquals(Result.Top.Y, Result.Next.Bot.Y) && Result.Next.OutIdx != ClipperLib.ClipperBase.Skip)
           Result = Result.Next;
         if (Result.Dx == ClipperLib.ClipperBase.horizontal && Result.Next.OutIdx != ClipperLib.ClipperBase.Skip)
         {
@@ -2624,51 +2624,51 @@
           Horz = Result;
           while (Horz.Prev.Dx == ClipperLib.ClipperBase.horizontal)
             Horz = Horz.Prev;
-          if (Horz.Prev.Top.X == Result.Next.Top.X)
+          if (fuzzyEquals(Horz.Prev.Top.X, Result.Next.Top.X))
           {
             if (!IsClockwise)
               Result = Horz.Prev;
           }
-          else if (Horz.Prev.Top.X > Result.Next.Top.X)
+          else if (fuzzyGt(Horz.Prev.Top.X, Result.Next.Top.X))
             Result = Horz.Prev;
         }
         while (E != Result)
         {
           E.NextInLML = E.Next;
-          if (E.Dx == ClipperLib.ClipperBase.horizontal && E != EStart && E.Bot.X != E.Prev.Top.X)
+          if (E.Dx == ClipperLib.ClipperBase.horizontal && E != EStart && !fuzzyEquals(E.Bot.X, E.Prev.Top.X))
             this.ReverseHorizontal(E);
           E = E.Next;
         }
-        if (E.Dx == ClipperLib.ClipperBase.horizontal && E != EStart && E.Bot.X != E.Prev.Top.X)
+        if (E.Dx == ClipperLib.ClipperBase.horizontal && E != EStart && !fuzzyEquals(E.Bot.X, E.Prev.Top.X))
           this.ReverseHorizontal(E);
         Result = Result.Next;
         //move to the edge just beyond current bound
       }
       else
       {
-        while (Result.Top.Y == Result.Prev.Bot.Y && Result.Prev.OutIdx != ClipperLib.ClipperBase.Skip)
+        while (fuzzyEquals(Result.Top.Y, Result.Prev.Bot.Y) && Result.Prev.OutIdx != ClipperLib.ClipperBase.Skip)
           Result = Result.Prev;
         if (Result.Dx == ClipperLib.ClipperBase.horizontal && Result.Prev.OutIdx != ClipperLib.ClipperBase.Skip)
         {
           Horz = Result;
           while (Horz.Next.Dx == ClipperLib.ClipperBase.horizontal)
             Horz = Horz.Next;
-          if (Horz.Next.Top.X == Result.Prev.Top.X)
+          if (fuzzyEquals(Horz.Next.Top.X, Result.Prev.Top.X))
           {
             if (!IsClockwise)
               Result = Horz.Next;
           }
-          else if (Horz.Next.Top.X > Result.Prev.Top.X)
+          else if (fuzzyGt(Horz.Next.Top.X, Result.Prev.Top.X))
             Result = Horz.Next;
         }
         while (E != Result)
         {
           E.NextInLML = E.Prev;
-          if (E.Dx == ClipperLib.ClipperBase.horizontal && E != EStart && E.Bot.X != E.Next.Top.X)
+          if (E.Dx == ClipperLib.ClipperBase.horizontal && E != EStart && !fuzzyEquals(E.Bot.X, E.Next.Top.X))
             this.ReverseHorizontal(E);
           E = E.Prev;
         }
-        if (E.Dx == ClipperLib.ClipperBase.horizontal && E != EStart && E.Bot.X != E.Next.Top.X)
+        if (E.Dx == ClipperLib.ClipperBase.horizontal && E != EStart && !fuzzyEquals(E.Bot.X, E.Next.Top.X))
           this.ReverseHorizontal(E);
         Result = Result.Prev;
         //move to the edge just beyond current bound
@@ -2681,7 +2681,7 @@
       E = Result;
       if (IsClockwise)
       {
-        while (E.Top.Y == E.Next.Bot.Y)
+        while (fuzzyEquals(E.Top.Y, E.Next.Bot.Y))
           E = E.Next;
         //don't include top horizontals when parsing a bound a second time,
         //they will be contained in the opposite bound ...
@@ -2690,7 +2690,7 @@
       }
       else
       {
-        while (E.Top.Y == E.Prev.Bot.Y)
+        while (fuzzyEquals(E.Top.Y, E.Prev.Bot.Y))
           E = E.Prev;
         while (E != Result && E.Dx == ClipperLib.ClipperBase.horizontal)
           E = E.Next;
