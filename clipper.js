@@ -4796,12 +4796,7 @@
         //console.log("e.Curr.X: " + e.Curr.X + " eNext.Curr.X" + eNext.Curr.X);
         if (e.Curr.X > eNext.Curr.X)
         {
-          if (!this.IntersectPoint(e, eNext, pt) && e.Curr.X > eNext.Curr.X + 1)
-          {
-            //console.log("e.Curr.X: "+JSON.stringify(JSON.decycle( e.Curr.X )));
-            //console.log("eNext.Curr.X+1: "+JSON.stringify(JSON.decycle( eNext.Curr.X+1)));
-            ClipperLib.Error("Intersection error");
-          }
+          //if (!this.IntersectPoint(e, eNext, pt)) used to raise 'Intersection error'
           if (pt.Y > botY)
           {
             pt.Y = botY;
